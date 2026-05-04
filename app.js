@@ -159,14 +159,14 @@ function buildSummaryText(dow, d) {
   if (dow === 6) {
     lines.push(`Hoy asistí al culto de las:`);
     lines.push(radios('cultoTime', [['1:00 PM', '1PM'], ['3:00 PM', '3PM'], ['5:00 PM', '5PM'], ['7:00 PM', '7PM']]));
-    lines.push(`¿Por qué virtual? ${v(d.virtualReason, true)}`);
+    lines.push(`¿Por qué me conecté virtual? ${v(d.virtualReason, true)}`);
   }
 
   // Dom — culto
   if (dow === 0) {
     lines.push(`Hoy asistí al culto de las:`);
     lines.push(radios('cultoTime', [['7:30 AM', '7:30'], ['9:30 AM', '9:30'], ['11:30 AM', '11:30'], ['1:30 PM', '1:30']]));
-    lines.push(`¿Por qué virtual? ${v(d.virtualReason, true)}`);
+    lines.push(`¿Por qué me conecté virtual? ${v(d.virtualReason, true)}`);
   }
 
   return lines.map(l => `<div class="day-line">${l}</div>`).join('');
@@ -261,10 +261,13 @@ function init() {
     window.print();
     document.title = prev;
   };
-  document.getElementById('export-btn').onclick = () => {
-    const blob = new Blob([JSON.stringify(localStorage)], { type: 'application/json' });
-    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `R07_Respaldo.json`; a.click();
-  };
+  const exportBtn = document.getElementById('export-btn');
+  if (exportBtn) {
+    exportBtn.onclick = () => {
+      const blob = new Blob([JSON.stringify(localStorage)], { type: 'application/json' });
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `R07_Respaldo.json`; a.click();
+    };
+  }
 }
 
 window.setField = setField;

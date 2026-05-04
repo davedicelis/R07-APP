@@ -1,3 +1,9 @@
+/* ==========================================================
+   R07 — Registro de Discipulado
+   Rediseño cosmético · Editorial vibrante
+   Serif (Fraunces) para títulos + Sans (DM Sans) para cuerpo
+   ========================================================== */
+
 *,
 *::before,
 *::after {
@@ -7,188 +13,396 @@
 }
 
 :root {
-  --blue: #1e3a5f;
-  --blue-light: #eff6ff;
-  --green: #16a34a;
-  --red: #dc2626;
-  --border: #d1d5db;
+  /* Acento neutral: grafito (mismo tono que el botón principal) + cálido secundario */
+  --accent: oklch(0.22 0.015 270);
+  --accent-2: oklch(0.22 0.015 270 / 0.06);
+  --accent-strong: oklch(0.14 0.012 270);
+  --warm: oklch(0.62 0.14 55);
+
+  /* Base claro */
+  --bg: oklch(0.985 0.004 90);
+  --surface: #ffffff;
+  --surface-2: oklch(0.965 0.005 90);
+  --surface-3: oklch(0.93 0.008 90);
+  --ink: oklch(0.22 0.015 270);
+  --ink-soft: oklch(0.42 0.012 270);
+  --ink-muted: oklch(0.58 0.01 270);
+  --line: oklch(0.82 0.008 270);
+  --line-soft: oklch(0.88 0.006 270);
+
+  --good: oklch(0.6 0.14 150);
+  --bad: oklch(0.58 0.2 25);
+
+  --radius-sm: 8px;
+  --radius: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 22px;
+
+  --shadow-sm: 0 1px 2px rgba(15, 18, 30, 0.04), 0 1px 1px rgba(15, 18, 30, 0.03);
+  --shadow: 0 4px 14px -4px rgba(15, 18, 30, 0.08), 0 2px 4px rgba(15, 18, 30, 0.04);
+  --shadow-lg: 0 18px 40px -12px rgba(15, 18, 30, 0.18), 0 4px 10px rgba(15, 18, 30, 0.06);
+
+  --font-serif: 'Fraunces', 'Iowan Old Style', 'Apple Garamond', Georgia, serif;
+  --font-sans: 'DM Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+  /* Compatibilidad con CSS antiguo de impresión */
+  --blue: oklch(0.36 0.18 268);
+  --blue-light: oklch(0.97 0.02 268);
+  --green: oklch(0.6 0.14 150);
+  --red: oklch(0.58 0.2 25);
+  --border: oklch(0.9 0.008 270);
   --white: #ffffff;
 }
 
+html[data-theme="dark"] {
+  --bg: oklch(0.16 0.012 270);
+  --surface: oklch(0.205 0.014 270);
+  --surface-2: oklch(0.235 0.014 270);
+  --surface-3: oklch(0.27 0.014 270);
+  --ink: oklch(0.96 0.005 90);
+  --ink-soft: oklch(0.78 0.01 270);
+  --ink-muted: oklch(0.58 0.012 270);
+  --line: oklch(0.4 0.014 270);
+  --line-soft: oklch(0.32 0.014 270);
+
+  --accent: oklch(0.92 0.005 90);
+  --accent-2: oklch(0.92 0.005 90 / 0.12);
+  --accent-strong: oklch(0.98 0.005 90);
+  --warm: oklch(0.78 0.14 55);
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow: 0 6px 18px -6px rgba(0, 0, 0, 0.55);
+  --shadow-lg: 0 24px 50px -16px rgba(0, 0, 0, 0.7);
+}
+
+/* ---------- Base ---------- */
+
+html, body {
+  height: 100%;
+}
+
 body {
-  font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-  background: white;
-  color: #111;
+  font-family: var(--font-sans);
+  font-size: 15px;
+  background:
+    radial-gradient(1200px 600px at 100% -10%, var(--accent-2), transparent 60%),
+    radial-gradient(900px 500px at -10% 110%, var(--accent-2), transparent 60%),
+    var(--bg);
+  background-attachment: fixed;
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  letter-spacing: -0.005em;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .app {
-  max-width: 1280px;
+  max-width: 1320px;
   margin: 0 auto;
-  padding: 10px;
+  padding: 24px;
 }
+
+/* ---------- Header ---------- */
 
 header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 15px;
-  background: var(--white);
-  padding: 15px;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  gap: 16px;
+  margin-bottom: 28px;
+  padding: 14px 18px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  backdrop-filter: blur(8px);
 }
 
 .header-nav {
   display: flex;
   align-items: center;
-  gap: 15px;
-}
-
-.header-nav button {
-  width: 35px;
-  height: 35px;
-  border-radius: 50%;
-  border: 1px solid var(--border);
-  background: white;
-  font-size: 20px;
-  cursor: pointer;
-  color: var(--blue);
+  gap: 14px;
 }
 
 .header-nav h1 {
-  font-size: 1rem;
-  font-weight: 700;
-  color: var(--blue);
-  letter-spacing: -0.5px;
+  font-family: var(--font-serif);
+  font-weight: 600;
+  font-variation-settings: "opsz" 96, "SOFT" 50;
+  font-size: clamp(1.4rem, 2.4vw, 1.9rem);
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  line-height: 1.1;
+  white-space: nowrap;
+  display: flex;
+  align-items: baseline;
+  gap: 0.4em;
 }
 
+.header-nav h1 .title-year {
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: 0.6em;
+  color: var(--ink-muted);
+  letter-spacing: 0.02em;
+  font-feature-settings: "tnum";
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ---------- Botones ---------- */
+
+.icon-btn {
+  width: 38px;
+  height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink-soft);
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.icon-btn:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: var(--accent-2);
+  transform: translateY(-1px);
+}
+
+.icon-btn:active {
+  transform: translateY(0);
+}
+
+#theme-toggle .icon-moon { display: none; }
+html[data-theme="dark"] #theme-toggle .icon-sun { display: none; }
+html[data-theme="dark"] #theme-toggle .icon-moon { display: inline; }
 
 .btn-print-main {
-  background: var(--blue);
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--ink);
+  color: var(--bg);
+  border: 1px solid var(--ink);
+  padding: 9px 16px;
+  border-radius: 999px;
   cursor: pointer;
-  font-weight: bold;
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: 14px;
+  letter-spacing: -0.005em;
+  transition: all 0.18s ease;
+}
+
+.btn-print-main:hover {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--bg);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow);
 }
 
 .btn-primary {
-  background: var(--green);
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 6px;
-  font-weight: bold;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--accent);
+  color: var(--bg);
+  border: 1px solid var(--accent);
+  padding: 10px 18px;
+  border-radius: 999px;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 14px;
   cursor: pointer;
+  transition: all 0.18s ease;
+  box-shadow: 0 4px 12px -4px var(--accent);
+}
+
+.btn-primary:hover {
+  background: var(--accent-strong);
+  border-color: var(--accent-strong);
+  color: var(--bg);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px -6px var(--accent);
 }
 
 .btn-discard {
-  background: #f3f4f6;
-  color: #4b5563;
-  border: 1px solid var(--border);
-  padding: 10px 15px;
-  border-radius: 6px;
+  background: transparent;
+  color: var(--ink-muted);
+  border: 1px solid var(--line);
+  padding: 9px 16px;
+  border-radius: 999px;
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: 14px;
   cursor: pointer;
+  transition: all 0.18s ease;
 }
 
 .btn-discard:hover {
-  background: #fee2e2;
-  color: var(--red);
+  background: oklch(0.58 0.2 25 / 0.08);
+  color: var(--bad);
+  border-color: oklch(0.58 0.2 25 / 0.4);
 }
 
-/* Grid Desktop */
+/* ---------- Calendario ---------- */
+
+.calendar-wrapper {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+
 .calendar-head {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 0;
-
-
-  /* border: 1px solid var(--blue); */
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--line);
 }
 
 .calendar-head span {
-  background: var(--blue);
-  color: white;
   text-align: center;
-  padding: 18px;
+  padding: 14px 8px;
+  font-family: var(--font-sans);
   font-weight: 600;
-  font-size: 13px;
-  border-right: 2px solid rgba(255, 255, 255, 0.35);
-
-}
-
-.calendar-head span:last-child {
-  border-right: none;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--ink-muted);
 }
 
 .calendar-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
+  background: var(--surface);
   gap: 0;
-  background: white;
-  border-left: 1px solid var(--border);
-  border-top: 1px solid var(--border);
 }
 
 .day-cell {
-  background: var(--white);
-  min-height: 120px;
-  padding: 8px;
+  background: var(--surface);
+  min-height: 132px;
+  padding: 10px 11px 11px;
   cursor: pointer;
   display: flex;
   flex-direction: column;
-  border-right: 1px solid var(--border);
-  border-bottom: 1px solid var(--border);
+  position: relative;
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  transition: background 0.18s ease, transform 0.18s ease;
+}
+
+/* Quitar bordes externos: última columna y última fila */
+.day-cell:nth-child(7n) {
+  border-right: none;
+}
+
+.day-cell:hover {
+  background: var(--surface-2);
+}
+
+.day-cell:hover .day-num {
+  color: var(--accent);
+}
+
+.day-cell.empty {
+  cursor: default;
+  background: transparent;
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.day-cell.empty:nth-child(7n) {
+  border-right: none;
+}
+
+.day-cell.weekend,
+.day-cell.holiday {
+  background: linear-gradient(180deg, var(--accent-2), transparent 70%), var(--surface);
+}
+
+.day-cell.has-data::before {
+  content: '';
+  position: absolute;
+  top: 10px;
+  left: 11px;
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-2);
 }
 
 .day-num {
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: var(--blue);
-  margin-bottom: 5px;
+  font-family: var(--font-serif);
+  font-variation-settings: "opsz" 60;
+  font-size: 1.35rem;
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 1;
+  margin-bottom: 6px;
+  margin-left: 14px;
+  letter-spacing: -0.02em;
+  transition: color 0.18s ease;
 }
 
 .day-data {
   font-size: 11px;
-  line-height: 1.3;
-  color: #444;
+  line-height: 1.45;
+  color: var(--ink-muted);
+  font-family: var(--font-sans);
 }
 
 .day-data b {
-  color: var(--blue);
+  color: var(--ink);
+  font-weight: 600;
 }
 
 .day-line {
-  line-height: 1.3;
-  color: #c8c8c8;
+  line-height: 1.4;
+  color: oklch(from var(--ink-muted) l c h / 0.5);
+  margin-bottom: 2px;
 }
 
 .has-data .day-line {
-  color: #444;
+  color: var(--ink-soft);
 }
 
 .has-data .day-line b {
-  color: #111;
+  color: var(--ink);
   font-weight: 700;
 }
 
 .festivo-tag {
-  font-size: 8px;
+  font-family: var(--font-sans);
+  font-size: 8.5px;
   font-weight: 600;
-  color: #9ca3af;
+  color: var(--warm);
   text-transform: uppercase;
-  letter-spacing: 0.4px;
-  margin-left: 5px;
+  letter-spacing: 0.08em;
+  margin-left: 6px;
   vertical-align: middle;
+  padding: 2px 6px;
+  background: oklch(from var(--warm) l c h / 0.12);
+  border-radius: 999px;
 }
 
 .blank {
   display: inline-block;
   min-width: 18px;
-  border-bottom: 1px solid #bbb;
+  border-bottom: 1px dashed var(--line);
   vertical-align: bottom;
   margin: 0 1px;
+  height: 1em;
 }
 
 .blank.wide {
@@ -198,7 +412,7 @@ header {
 .radio-row {
   display: inline-flex;
   flex-wrap: wrap;
-  gap: 2px 7px;
+  gap: 2px 8px;
   align-items: center;
 }
 
@@ -206,13 +420,13 @@ header {
   display: inline-flex;
   align-items: center;
   gap: 3px;
-  font-size: 9px;
-  color: #d0d0d0;
+  font-size: 9.5px;
+  color: oklch(from var(--ink-muted) l c h / 0.5);
   white-space: nowrap;
 }
 
 .radio-opt.sel {
-  color: #111;
+  color: var(--accent);
   font-weight: 700;
 }
 
@@ -221,48 +435,90 @@ header {
   line-height: 1;
 }
 
-.day-cell.weekend {
-  background: #eef2fb;
-}
+/* ---------- Móvil ---------- */
 
-.day-cell.holiday {
-  background: #eef2fb;
-}
-
-/* Móvil */
 @media (max-width: 768px) {
+  .app {
+    padding: 14px;
+  }
+
+  header {
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 12px;
+  }
+
+  .header-nav h1 {
+    font-size: 1.3rem;
+  }
+
+  .btn-print-main span {
+    display: none;
+  }
+
+  .btn-print-main {
+    width: 38px;
+    height: 38px;
+    padding: 0;
+    justify-content: center;
+    border-radius: 999px;
+  }
+
   .no-mobile-head {
     display: none;
+  }
+
+  .calendar-wrapper {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    overflow: visible;
   }
 
   .calendar-grid {
     grid-template-columns: 1fr;
     gap: 10px;
     background: transparent;
-    border: none;
   }
 
   .day-cell {
     min-height: auto;
-    border-radius: 8px;
-    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    border: 1px solid var(--line);
+    background: var(--surface);
     flex-direction: row;
-    gap: 15px;
-    padding: 15px;
+    gap: 14px;
+    padding: 14px;
     align-items: flex-start;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .day-cell.has-data::before {
+    display: none;
+  }
+
+  .day-cell.weekend,
+  .day-cell.holiday {
+    background: linear-gradient(180deg, var(--accent-2), transparent 70%), var(--surface);
   }
 
   .day-num {
-    background: var(--blue);
-    color: white;
-    width: 35px;
-    height: 35px;
-    border-radius: 50%;
+    background: var(--ink);
+    color: var(--bg);
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
     margin: 0;
+    font-size: 1.05rem;
+  }
+
+  .day-cell.has-data .day-num {
+    background: var(--accent);
+    color: var(--bg);
   }
 
   .festivo-tag {
@@ -270,98 +526,170 @@ header {
   }
 
   .day-data {
-    font-size: 14px;
+    font-size: 13.5px;
+    flex: 1;
   }
 }
 
-/* Modal */
+/* ---------- Modal ---------- */
+
 .modal-overlay {
   display: none;
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: oklch(0.16 0.012 270 / 0.55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
   z-index: 1000;
   align-items: center;
   justify-content: center;
+  padding: 16px;
+  animation: overlayIn 0.18s ease;
 }
 
 .modal-overlay.open {
   display: flex;
 }
 
+@keyframes overlayIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
 .modal {
-  background: white;
-  width: 95%;
-  max-width: 500px;
-  border-radius: 12px;
+  background: var(--surface);
+  width: 100%;
+  max-width: 540px;
+  border-radius: var(--radius-xl);
   display: flex;
   flex-direction: column;
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+  animation: modalIn 0.22s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+@keyframes modalIn {
+  from { opacity: 0; transform: translateY(12px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 .modal-header {
-  padding: 15px 20px;
-  background: var(--blue);
-  color: white;
-  border-radius: 12px 12px 0 0;
+  padding: 20px 24px 16px;
+  background: var(--surface);
+  color: var(--ink);
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 16px;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.modal-header h2 {
+  font-family: var(--font-serif);
+  font-variation-settings: "opsz" 90;
+  font-weight: 600;
+  font-size: 1.35rem;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  line-height: 1.2;
 }
 
 .modal-body {
-  padding: 20px;
+  padding: 22px 24px;
   max-height: 70vh;
   overflow-y: auto;
 }
 
 .modal-footer {
-  padding: 15px 20px;
-  border-top: 1px solid #eee;
+  padding: 14px 20px;
+  border-top: 1px solid var(--line-soft);
+  background: var(--surface-2);
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 12px;
 }
 
 .save-side {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
 }
 
 #modal-close {
-  background: none;
-  border: none;
-  color: white;
-  font-size: 24px;
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--ink-soft);
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  font-size: 22px;
+  line-height: 1;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.18s ease;
 }
 
-/* Formulario */
+#modal-close:hover {
+  color: var(--bad);
+  border-color: oklch(0.58 0.2 25 / 0.4);
+  background: oklch(0.58 0.2 25 / 0.08);
+}
+
+/* ---------- Formulario ---------- */
+
 .form-group {
-  margin-bottom: 15px;
+  margin-bottom: 18px;
+}
+
+.form-group:last-child {
+  margin-bottom: 0;
 }
 
 .field-label {
   display: block;
-  font-size: 13px;
-  font-weight: 600;
-  margin-bottom: 5px;
-  color: #374151;
+  font-family: var(--font-sans);
+  font-size: 12.5px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: var(--ink);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
 }
 
 input[type="text"],
 input[type="number"] {
   width: 100%;
-  padding: 12px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  font-size: 16px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  font-size: 15px;
+  font-family: var(--font-sans);
+  color: var(--ink);
+  background: var(--surface);
+  transition: all 0.18s ease;
+}
+
+input[type="text"]:hover,
+input[type="number"]:hover {
+  border-color: oklch(from var(--accent) l c h / 0.4);
+}
+
+input[type="text"]:focus,
+input[type="number"]:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-2);
 }
 
 input::placeholder {
-  color: #9ca3af;
-  font-style: italic;
+  color: var(--ink-soft);
+  font-style: normal;
   font-size: 14px;
+  opacity: 0.85;
 }
 
 .radio-group {
@@ -371,33 +699,110 @@ input::placeholder {
 }
 
 .radio-label {
-  border: 1px solid var(--border);
-  padding: 12px;
-  border-radius: 6px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  padding: 12px 14px;
+  border-radius: var(--radius);
   cursor: pointer;
   font-size: 14px;
+  font-family: var(--font-sans);
+  font-weight: 500;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
+  color: var(--ink);
+  transition: all 0.18s ease;
+}
+
+.radio-label:hover {
+  border-color: oklch(from var(--accent) l c h / 0.5);
+  color: var(--ink);
+  background: var(--accent-2);
+}
+
+.radio-label:has(input:checked) {
+  border-color: var(--accent);
+  background: var(--accent-2);
+  color: var(--ink);
+  box-shadow: 0 0 0 3px var(--accent-2);
+}
+
+.radio-label input[type="radio"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  border: 1.5px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  margin: 0;
+  display: inline-block;
+  position: relative;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  flex-shrink: 0;
+}
+
+.radio-label input[type="radio"]:checked {
+  border-color: var(--accent);
+  background: var(--accent);
+  box-shadow: inset 0 0 0 3px var(--surface);
 }
 
 .save-indicator {
-  color: var(--green);
-  font-weight: bold;
+  color: var(--good);
+  font-weight: 600;
   font-size: 13px;
+  font-family: var(--font-sans);
   opacity: 0;
-  transition: 0.3s;
+  transform: translateX(6px);
+  transition: opacity 0.25s ease, transform 0.25s ease;
 }
 
 .save-indicator.show {
   opacity: 1;
+  transform: translateX(0);
 }
 
-/* --- IMPRESIÓN --- */
+/* ---------- Scrollbar (modal) ---------- */
+
+.modal-body::-webkit-scrollbar {
+  width: 8px;
+}
+.modal-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+.modal-body::-webkit-scrollbar-thumb {
+  background: var(--line);
+  border-radius: 999px;
+}
+.modal-body::-webkit-scrollbar-thumb:hover {
+  background: var(--ink-muted);
+}
+
+/* ---------- Print header (oculto en pantalla) ---------- */
+
+.print-header {
+  display: none;
+}
+
+/* ==========================================================
+   IMPRESIÓN — Estética editorial (Fraunces + DM Sans + índigo)
+   A4 horizontal, mantiene la maquetación original
+   ========================================================== */
 @media print {
   @page {
     size: A4 landscape;
-    margin: 7mm 6mm;
+    margin: 4mm 5mm;
+  }
+
+  html, body {
+    height: auto !important;
+  }
+
+  .day-cell {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
   }
 
   * {
@@ -406,67 +811,104 @@ input::placeholder {
     box-sizing: border-box !important;
   }
 
+  /* Forzar tema claro al imprimir, sin importar el toggle */
+  html[data-theme="dark"],
+  html {
+    --print-accent: #1a1a1a;
+    --print-accent-soft: #ececec;
+    --print-warm: #b86a3a;
+    --print-warm-soft: #f7e8dc;
+    --print-ink: #1a1a1a;
+    --print-ink-soft: #555;
+    --print-ink-muted: #8a8a8a;
+    --print-line: #9a9a9a;
+    --print-line-soft: #b8b8b8;
+  }
+
   .no-print {
     display: none !important;
   }
 
   body {
     background: white !important;
-    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
+    font-family: 'DM Sans', 'Inter', -apple-system, 'Segoe UI', Roboto, sans-serif !important;
     margin: 0 !important;
     padding: 0 !important;
+    color: var(--print-ink) !important;
   }
 
   .app {
     padding: 0 !important;
+    max-width: none !important;
   }
 
-  /* ── Título ── */
+  /* Contenedor del calendario — redondeado como en pantalla */
+  .calendar-wrapper {
+    background: white !important;
+    border: 0.6pt solid var(--print-line) !important;
+    box-shadow: none !important;
+    border-radius: 3mm !important;
+    overflow: hidden !important;
+  }
+
+  /* ── Título (centrado, R07 + Mes + Año mismo tamaño) ── */
   .print-header {
     display: block !important;
     text-align: center !important;
-    padding: 1mm 0 3mm !important;
+    padding: 0 0 3.5mm !important;
     line-height: 1 !important;
   }
 
-  .print-header h2,
+  .print-header h2 {
+    font-family: 'Fraunces', 'Iowan Old Style', Georgia, serif !important;
+    font-variation-settings: "opsz" 144 !important;
+    font-size: 15pt !important;
+    font-weight: 600 !important;
+    color: var(--print-ink) !important;
+    letter-spacing: -0.025em !important;
+    line-height: 1 !important;
+    display: inline-flex !important;
+    align-items: baseline !important;
+    gap: 0.35em !important;
+  }
+
   .print-year {
-    font-size: 22pt !important;
-    font-weight: 800 !important;
-    color: var(--blue) !important;
-    letter-spacing: -0.5px !important;
+    font-family: 'Fraunces', 'Iowan Old Style', Georgia, serif !important;
+    font-variation-settings: "opsz" 144 !important;
+    font-size: 15pt !important;
+    font-weight: 600 !important;
+    color: var(--print-ink) !important;
+    letter-spacing: -0.025em !important;
     line-height: 1 !important;
   }
 
-  /* ── Cabecera de días ── */
+  /* ── Cabecera de días (gris suave, mayúsculas, igual que pantalla) ── */
   .calendar-head {
     display: grid !important;
     grid-template-columns: repeat(7, 1fr) !important;
     gap: 0 !important;
-    background: white !important;
-    /* border-left: 0.5pt solid #ccc !important;
-    border-top: 0.5pt solid #ccc !important; */
-    margin-bottom: 1mm !important;
+    background: var(--print-accent-soft) !important;
+    margin-bottom: 0 !important;
+    border-bottom: 0.6pt solid var(--print-line) !important;
+    padding: 0 !important;
+    border-radius: 0 !important;
   }
 
   .calendar-head span {
-    background: var(--blue) !important;
-    color: #ffffff !important;
-    /* border-right: 0.5pt solid #ccc !important;
-    border-bottom: 0.5pt solid #ccc !important; */
-    font-size: 7.5pt !important;
-    font-weight: 700 !important;
+    background: transparent !important;
+    color: var(--print-ink-soft) !important;
+    font-family: 'DM Sans', sans-serif !important;
+    font-size: 7pt !important;
+    font-weight: 600 !important;
     text-transform: uppercase !important;
     text-align: center !important;
-    padding: 2mm 1mm !important;
-    letter-spacing: 0.3px !important;
+    padding: 1.8mm 1mm !important;
+    letter-spacing: 0.16em !important;
+    border-radius: 0 !important;
+    border: none !important;
   }
 
-  .calendar-head span:last-child {
-    border-right: none !important;
-  }
-
-  /* ── Grilla ── */
+  /* ── Grilla (bordes en celdas, sin fondo gris) ── */
   .calendar-grid {
     display: grid !important;
     grid-template-columns: repeat(7, 1fr) !important;
@@ -475,66 +917,102 @@ input::placeholder {
     border: none !important;
   }
 
-  /* ── Celdas ── */
+  /* ── Celdas con borde individual ── */
   .day-cell {
-    border-right: 0.5pt solid #ccc !important;
-    border-bottom: 0.5pt solid #ccc !important;
-    height: 29mm !important;
+    border: none !important;
+    border-right: 0.5pt solid var(--print-line) !important;
+    border-bottom: 0.5pt solid var(--print-line) !important;
+    height: 27.5mm !important;
     min-height: 0 !important;
-    padding: 1.5mm !important;
+    padding: 1.5mm 1.8mm !important;
     display: flex !important;
     flex-direction: column !important;
     background: #ffffff !important;
     position: relative !important;
     overflow: hidden !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    margin: 0 !important;
   }
 
+  /* Quitar bordes externos */
+  .day-cell:nth-child(7n) {
+    border-right: none !important;
+  }
+
+  /* Celdas vacías: invisibles, sin fondo gris */
   .day-cell.empty {
-    background: #f8f8f8 !important;
+    background: transparent !important;
+    border-right: 0.5pt solid var(--print-line) !important;
+    border-bottom: 0.5pt solid var(--print-line) !important;
   }
 
-  .day-cell.weekend {
-    background: #eef1f8 !important;
+  .day-cell.empty:nth-child(7n) {
+    border-right: none !important;
   }
 
+  /* Weekend/Holiday — degradado sutil neutro, igual a pantalla */
+  .day-cell.weekend,
   .day-cell.holiday {
-    background: #eef1f8 !important;
+    background: linear-gradient(180deg, var(--print-accent-soft), #ffffff 70%) !important;
   }
 
-  /* ── Número del día ── */
-  .day-num {
+  /* Punto grafito con halo para días con datos */
+  .day-cell.has-data::before {
+    content: '' !important;
     position: absolute !important;
-    top: 1mm !important;
-    right: 1.5mm !important;
-    font-size: 8pt !important;
-    font-weight: 800 !important;
-    color: #555 !important;
+    top: 2mm !important;
+    left: 2mm !important;
+    width: 1.4mm !important;
+    height: 1.4mm !important;
+    border-radius: 50% !important;
+    background: var(--print-accent) !important;
+    box-shadow: 0 0 0 0.7mm var(--print-accent-soft) !important;
+  }
+
+  /* ── Número del día (serif editorial, alineado a la izquierda como en pantalla) ── */
+  .day-num {
+    position: static !important;
+    font-family: 'Fraunces', 'Iowan Old Style', Georgia, serif !important;
+    font-variation-settings: "opsz" 60 !important;
+    font-size: 11pt !important;
+    font-weight: 600 !important;
+    color: var(--print-ink) !important;
     line-height: 1 !important;
     width: auto !important;
     height: auto !important;
     background: transparent !important;
     border-radius: 0 !important;
     border-bottom: none !important;
-    margin: 0 !important;
-    display: block !important;
+    margin: 0 0 1mm 3mm !important;
+    display: inline-flex !important;
+    align-items: baseline !important;
+    letter-spacing: -0.02em !important;
   }
 
+  /* Festivo pill cálido como en pantalla */
   .festivo-tag {
-    font-size: 5.5pt !important;
-    color: #999 !important;
+    font-family: 'DM Sans', sans-serif !important;
+    font-size: 5pt !important;
+    color: var(--print-warm) !important;
+    background: var(--print-warm-soft) !important;
+    padding: 0.5mm 1.2mm !important;
+    border-radius: 999px !important;
     font-weight: 600 !important;
-    letter-spacing: 0.3px !important;
-    margin-left: 3px !important;
+    letter-spacing: 0.08em !important;
+    margin-left: 1.5mm !important;
     vertical-align: middle !important;
     text-transform: uppercase !important;
+    display: inline-block !important;
   }
 
   .blank {
     display: inline-block !important;
     min-width: 10px !important;
-    border-bottom: 0.5pt solid #aaa !important;
+    border-bottom: 0.4pt dashed var(--print-ink-muted) !important;
     vertical-align: bottom !important;
     margin: 0 1px !important;
+    height: auto !important;
   }
 
   .blank.wide {
@@ -542,11 +1020,12 @@ input::placeholder {
   }
 
   .day-line {
-    color: #c8c8c8 !important;
+    color: var(--print-ink-muted) !important;
+    font-family: 'DM Sans', sans-serif !important;
   }
 
   .has-data .day-line {
-    color: #1a1a1a !important;
+    color: var(--print-ink) !important;
   }
 
   .has-data .day-line b {
@@ -566,12 +1045,13 @@ input::placeholder {
     align-items: center !important;
     gap: 2px !important;
     font-size: 6pt !important;
-    color: #ccc !important;
+    color: var(--print-ink-muted) !important;
     white-space: nowrap !important;
+    font-family: 'DM Sans', sans-serif !important;
   }
 
   .radio-opt.sel {
-    color: #000 !important;
+    color: var(--print-accent) !important;
     font-weight: 700 !important;
   }
 
@@ -586,10 +1066,11 @@ input::placeholder {
     display: flex !important;
     flex-direction: column !important;
     justify-content: space-evenly !important;
-    padding-top: 3.5mm !important;
+    padding-top: 0 !important;
+    font-family: 'DM Sans', sans-serif !important;
     font-size: 6.8pt !important;
-    line-height: 1.25 !important;
-    color: #1a1a1a !important;
+    line-height: 1.3 !important;
+    color: var(--print-ink) !important;
     overflow: hidden !important;
   }
 
@@ -603,8 +1084,4 @@ input::placeholder {
     font-weight: 700 !important;
     color: #000 !important;
   }
-}
-
-.print-header {
-  display: none;
 }
