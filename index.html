@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>R07 — Registro de Discipulado</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+  <div class="app">
+    <header class="no-print">
+      <div class="header-nav">
+        <button id="prev-month" aria-label="Mes anterior">&#8249;</button>
+        <h1 id="month-title"></h1>
+        <button id="next-month" aria-label="Mes siguiente">&#8250;</button>
+      </div>
+      <div class="header-actions">
+        <!-- <button id="export-btn" title="Exportar respaldo JSON">&#128190; Respaldo</button> -->
+        <button id="print-btn" class="btn-print-main">&#128438; Imprimir / PDF</button>
+      </div>
+    </header>
+
+    <div class="print-header">
+      <h2 id="print-month-title"></h2>
+    </div>
+
+    <div class="calendar-wrapper">
+      <div class="calendar-head no-mobile-head">
+        <span>Domingo</span><span>Lunes</span><span>Martes</span><span>Miércoles</span><span>Jueves</span><span>Viernes</span><span>Sábado</span>
+      </div>
+      <div class="calendar-grid" id="calendar-grid"></div>
+    </div>
+  </div>
+
+  <div class="modal-overlay no-print" id="modal-overlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="modal-title"></h2>
+        <button id="modal-close">&times;</button>
+      </div>
+      <div class="modal-body" id="modal-body"></div>
+      <div class="modal-footer">
+        <button id="modal-discard-btn" class="btn-discard">Descartar</button>
+        <div class="save-side">
+          <span id="save-indicator" class="save-indicator">✓ Guardado</span>
+          <button id="modal-save-btn" class="btn-primary">Guardar y Cerrar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+
+</html>
