@@ -245,6 +245,15 @@ function discardChanges() {
 
 function closeModal() { document.getElementById('modal-overlay').classList.remove('open'); }
 
+function clearDay() {
+  if (activeDs) {
+    delete monthData[activeDs];
+    saveMonth();
+    renderCalendar();
+  }
+  closeModal();
+}
+
 function init() {
   const now = new Date(); curYear = now.getFullYear(); curMonth = now.getMonth();
   monthData = loadMonth(curYear, curMonth);
@@ -253,8 +262,8 @@ function init() {
   document.getElementById('prev-month').onclick = () => { curMonth--; if (curMonth < 0) { curMonth = 11; curYear--; } monthData = loadMonth(curYear, curMonth); renderCalendar(); };
   document.getElementById('next-month').onclick = () => { curMonth++; if (curMonth > 11) { curMonth = 0; curYear++; } monthData = loadMonth(curYear, curMonth); renderCalendar(); };
   document.getElementById('modal-close').onclick = closeModal;
+  document.getElementById('modal-clear-btn').onclick = clearDay;
   document.getElementById('modal-save-btn').onclick = closeModal;
-  document.getElementById('modal-discard-btn').onclick = discardChanges;
   document.getElementById('print-btn').onclick = () => {
     const prev = document.title;
     document.title = `R07 — ${MONTHS[curMonth]} ${curYear}`;
