@@ -187,6 +187,31 @@ function openModal(d, dow, ds) {
     body.appendChild(div);
   }
 
+  function addTimeSelector(label, field, defaultPeriod = 'AM') {
+    const div = document.createElement('div');
+    div.className = 'form-group';
+    const existing = data[field] || '';
+    let selHour = '6', selMin = '00', selPeriod = defaultPeriod;
+    if (existing) {
+      const m = existing.match(/^(\d+):(\d+)\s*(AM|PM)$/i);
+      if (m) { selHour = String(parseInt(m[1])); selMin = m[2].padStart(2, '0'); selPeriod = m[3].toUpperCase(); }
+    }
+    const hourOpts = Array.from({length: 12}, (_, i) => i + 1)
+      .map(h => `<option value="${h}"${String(h) === selHour ? ' selected' : ''}>${h}</option>`).join('');
+    const minOpts = ['00', '15', '30', '45']
+      .map(m => `<option value="${m}"${m === selMin ? ' selected' : ''}>${m}</option>`).join('');
+    const periodOpts = ['AM', 'PM']
+      .map(p => `<option value="${p}"${p === selPeriod ? ' selected' : ''}>${p}</option>`).join('');
+    div.innerHTML = `<label class="field-label">${label}</label>
+      <div class="time-selector">
+        <select class="time-hour" onchange="updateTimeField('${ds}','${field}',this.closest('.time-selector'))">${hourOpts}</select>
+        <span class="time-sep">:</span>
+        <select class="time-min" onchange="updateTimeField('${ds}','${field}',this.closest('.time-selector'))">${minOpts}</select>
+        <select class="time-period" onchange="updateTimeField('${ds}','${field}',this.closest('.time-selector'))">${periodOpts}</select>
+      </div>`;
+    body.appendChild(div);
+  }
+
   function addRadio(label, field, options) {
     const div = document.createElement('div');
     div.className = 'form-group';
@@ -208,8 +233,8 @@ function openModal(d, dow, ds) {
 
   if (dow === 2 || dow === 4) {
     addRadio('Asistencia Oración', 'prayerAttendance', [{ v: 'connected', l: 'Me conecté' }, { v: 'attended', l: 'Asistí' }]);
-    addInput('Desde (Hora)', 'prayerFrom', 'ej. 6:00 AM');
-    addInput('Hasta (Hora)', 'prayerTo', 'ej. 7:00 PM');
+    addTimeSelector('Desde (Hora)', 'prayerFrom', 'AM');
+    addTimeSelector('Hasta (Hora)', 'prayerTo', 'PM');
     addInput('Y leí en la Biblia', 'bibleReading', 'ej. Josué 1');
   } else if (dow === 3) {
     addRadio('Al culto de las:', 'cultoTime', [{ v: '5:00 PM', l: '5:00 PM' }, { v: '7:00 PM', l: '7:00 PM' }]);
@@ -275,7 +300,15 @@ function init() {
   }
 }
 
+function updateTimeField(ds, field, container) {
+  const hour = container.querySelector('.time-hour').value;
+  const min = container.querySelector('.time-min').value;
+  const period = container.querySelector('.time-period').value;
+  setField(ds, field, `${hour}:${min} ${period}`);
+}
+
 window.setField = setField;
+window.updateTimeField = updateTimeField;
 document.addEventListener('DOMContentLoaded', init);
 
 // Escalado automático al imprimir para ajustar a A4 horizontal.
