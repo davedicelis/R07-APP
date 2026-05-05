@@ -926,7 +926,7 @@ input::placeholder {
   }
 
   html, body {
-    height: auto !important;
+    height: 100% !important;
   }
 
   .day-cell {
@@ -969,6 +969,9 @@ input::placeholder {
   .app {
     padding: 0 !important;
     max-width: none !important;
+    height: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
   }
 
   /* Contenedor del calendario — redondeado como en pantalla */
@@ -978,6 +981,10 @@ input::placeholder {
     box-shadow: none !important;
     border-radius: 3mm !important;
     overflow: hidden !important;
+    flex: 1 !important;
+    min-height: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
   }
 
   /* ── Título (centrado, R07 + Mes + Año mismo tamaño) ── */
@@ -1041,9 +1048,12 @@ input::placeholder {
   .calendar-grid {
     display: grid !important;
     grid-template-columns: repeat(7, 1fr) !important;
+    grid-auto-rows: minmax(0, 1fr) !important;
     gap: 0 !important;
     background: white !important;
     border: none !important;
+    flex: 1 !important;
+    min-height: 0 !important;
   }
 
   /* ── Celdas con borde individual ── */
@@ -1051,9 +1061,9 @@ input::placeholder {
     border: none !important;
     border-right: 0.5pt solid var(--print-line) !important;
     border-bottom: 0.5pt solid var(--print-line) !important;
-    height: 27.5mm !important;
+    height: auto !important;
     min-height: 0 !important;
-    padding: 1.5mm 1.8mm !important;
+    padding: 0.8mm 1.5mm !important;
     display: flex !important;
     flex-direction: column !important;
     background: #ffffff !important;
@@ -1113,7 +1123,7 @@ input::placeholder {
     background: transparent !important;
     border-radius: 0 !important;
     border-bottom: none !important;
-    margin: 0 0 1mm 3mm !important;
+    margin: 0 0 0.5mm 3mm !important;
     display: inline-flex !important;
     align-items: baseline !important;
     letter-spacing: -0.02em !important;
@@ -1165,7 +1175,7 @@ input::placeholder {
   .radio-row {
     display: inline-flex !important;
     flex-wrap: wrap !important;
-    gap: 1px 5px !important;
+    gap: 0px 3px !important;
     align-items: center !important;
   }
 
@@ -1194,13 +1204,14 @@ input::placeholder {
     flex: 1 !important;
     display: flex !important;
     flex-direction: column !important;
-    justify-content: space-evenly !important;
-    padding-top: 0 !important;
+    justify-content: flex-start !important;
+    gap: 0.4mm !important;
+    padding-top: 0.2mm !important;
     font-family: 'DM Sans', sans-serif !important;
-    font-size: 6.8pt !important;
-    line-height: 1.3 !important;
+    font-size: 6.5pt !important;
+    line-height: 1.2 !important;
     color: var(--print-ink) !important;
-    overflow: hidden !important;
+    overflow: visible !important;
   }
 
   .day-line {

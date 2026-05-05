@@ -163,7 +163,7 @@ function buildSummaryText(dow, d) {
   // Dom — culto
   if (dow === 0) {
     lines.push(`Hoy asistí al culto de las:`);
-    lines.push(radios('cultoTime', [['7:30 AM', '7:30'], ['9:30 AM', '9:30'], ['11:30 AM', '11:30'], ['1:30 PM', '1:30']]));
+    lines.push(radios('cultoTime', [['7:30 AM', '7:30 AM'], ['9:30 AM', '9:30 AM'], ['11:30 AM', '11:30 AM'], ['1:30 PM', '1:30 PM']]));
     lines.push(`¿Por qué me conecté virtual? ${v(d.virtualReason, true)}`);
   }
 
@@ -277,3 +277,33 @@ function init() {
 
 window.setField = setField;
 document.addEventListener('DOMContentLoaded', init);
+
+// Escalado automático al imprimir para ajustar a A4 horizontal.
+// Usa `zoom` (no transform) porque zoom afecta el flujo del documento.
+// El conteo de filas determina si se necesita reducción: meses con 6 filas
+// no caben en A4 horizontal sin reducción.
+(function setupPrintScale() {
+  function getWeekRows() {
+    const grid = document.querySelector('.calendar-grid');
+    return grid ? Math.ceil(grid.children.length / 7) : 5;
+  }
+
+  function applyScale() {
+    const app = document.querySelector('.app');
+    if (!app) return;
+    app.style.zoom = '';
+    const rows = getWeekRows();
+    if (rows >= 6) {
+      // Escalar proporcionalmente: 5 filas referencia / filas reales
+      app.style.zoom = (5 / rows).toFixed(4);
+    }
+  }
+
+  function resetScale() {
+    const el = document.querySelector('.app');
+    if (el) el.style.zoom = '';
+  }
+
+  window.addEventListener('beforeprint', applyScale);
+  window.addEventListener('afterprint', resetScale);
+}());
