@@ -2,12 +2,10 @@
 
 const MONTHS = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
 const DAY_NAMES = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
-const DAY_TYPES = ['domingo', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'];
 
 let curYear, curMonth, monthData;
-let originalDayData = null; // Para la función "Descartar"
 let activeDs = null;
-let colombiaHolidays = new Map();
+let colombiaHolidays = new Set();
 let holidaysYear = -1;
 
 function getEaster(year) {
@@ -174,8 +172,6 @@ function buildSummaryText(dow, d) {
 
 function openModal(d, dow, ds) {
   activeDs = ds;
-  // Respaldar datos actuales por si decide descartar
-  originalDayData = monthData[ds] ? JSON.parse(JSON.stringify(monthData[ds])) : null;
 
   document.getElementById('modal-title').textContent = `${DAY_NAMES[dow]}, ${d} de ${MONTHS[curMonth]}`;
   const body = document.getElementById('modal-body');
@@ -230,19 +226,6 @@ function openModal(d, dow, ds) {
   document.getElementById('modal-overlay').classList.add('open');
 }
 
-function discardChanges() {
-  if (activeDs) {
-    if (originalDayData) {
-      monthData[activeDs] = originalDayData;
-    } else {
-      delete monthData[activeDs];
-    }
-    saveMonth();
-    renderCalendar();
-  }
-  closeModal();
-}
-
 function closeModal() { document.getElementById('modal-overlay').classList.remove('open'); }
 
 function clearDay() {
@@ -254,13 +237,23 @@ function clearDay() {
   closeModal();
 }
 
+function shiftMonth(delta) {
+  curMonth += delta;
+  if (curMonth < 0) { curMonth = 11; curYear--; }
+  else if (curMonth > 11) { curMonth = 0; curYear++; }
+  monthData = loadMonth(curYear, curMonth);
+  renderCalendar();
+}
+
 function init() {
-  const now = new Date(); curYear = now.getFullYear(); curMonth = now.getMonth();
+  const now = new Date();
+  curYear = now.getFullYear();
+  curMonth = now.getMonth();
   monthData = loadMonth(curYear, curMonth);
   renderCalendar();
 
-  document.getElementById('prev-month').onclick = () => { curMonth--; if (curMonth < 0) { curMonth = 11; curYear--; } monthData = loadMonth(curYear, curMonth); renderCalendar(); };
-  document.getElementById('next-month').onclick = () => { curMonth++; if (curMonth > 11) { curMonth = 0; curYear++; } monthData = loadMonth(curYear, curMonth); renderCalendar(); };
+  document.getElementById('prev-month').onclick = () => shiftMonth(-1);
+  document.getElementById('next-month').onclick = () => shiftMonth(1);
   document.getElementById('modal-close').onclick = closeModal;
   document.getElementById('modal-clear-btn').onclick = clearDay;
   document.getElementById('modal-save-btn').onclick = closeModal;
@@ -274,7 +267,10 @@ function init() {
   if (exportBtn) {
     exportBtn.onclick = () => {
       const blob = new Blob([JSON.stringify(localStorage)], { type: 'application/json' });
-      const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `R07_Respaldo.json`; a.click();
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'R07_Respaldo.json';
+      a.click();
     };
   }
 }

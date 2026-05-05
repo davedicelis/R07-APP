@@ -236,25 +236,6 @@ html[data-theme="dark"] #theme-toggle .icon-moon { display: inline; }
   box-shadow: 0 8px 20px -6px var(--accent);
 }
 
-.btn-discard {
-  background: transparent;
-  color: var(--ink-muted);
-  border: 1px solid var(--line);
-  padding: 9px 16px;
-  border-radius: 999px;
-  font-family: var(--font-sans);
-  font-weight: 500;
-  font-size: 14px;
-  cursor: pointer;
-  transition: all 0.18s ease;
-}
-
-.btn-discard:hover {
-  background: oklch(0.58 0.2 25 / 0.08);
-  color: var(--bad);
-  border-color: oklch(0.58 0.2 25 / 0.4);
-}
-
 /* ---------- Calendario ---------- */
 
 .calendar-wrapper {
