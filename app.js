@@ -1,5 +1,16 @@
 'use strict';
 
+// ============================================================
+// Supabase — reemplaza estos valores con los de tu proyecto
+// supabase.com → Project Settings → API
+// ============================================================
+const SUPABASE_URL = 'https://TU_PROYECTO.supabase.co';
+const SUPABASE_ANON_KEY = 'TU_ANON_KEY';
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// ============================================================
+// Constantes y estado global
+// ============================================================
 const MONTHS = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
 const DAY_NAMES = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
 
@@ -7,7 +18,11 @@ let curYear, curMonth, monthData;
 let activeDs = null;
 let colombiaHolidays = new Set();
 let holidaysYear = -1;
+let currentUser = null;
 
+// ============================================================
+// Festivos Colombia
+// ============================================================
 function getEaster(year) {
   const a = year % 19, b = Math.floor(year / 100), c = year % 100;
   const d = Math.floor(b / 4), e = b % 4, f = Math.floor((b + 8) / 25);
@@ -47,19 +62,59 @@ function getColombiaHolidays(year) {
   return h;
 }
 
+// ============================================================
+// Almacenamiento: localStorage (caché) + Supabase (fuente de verdad)
+// ============================================================
 function storageKey(y, m) { return `r07_${y}-${String(m + 1).padStart(2, '0')}`; }
 
-function loadMonth(y, m) {
-  const raw = localStorage.getItem(storageKey(y, m));
-  return raw ? JSON.parse(raw) : {};
+async function loadMonth(y, m) {
+  if (currentUser) {
+    const prefix = `${y}-${m}-`;
+    const { data, error } = await sb
+      .from('r07_data')
+      .select('day_key, data')
+      .eq('user_id', currentUser.id)
+      .like('day_key', `${prefix}%`);
+
+    if (!error && data) {
+      const obj = {};
+      data.forEach(row => { obj[row.day_key] = row.data; });
+      try { localStorage.setItem(storageKey(y, m), JSON.stringify(obj)); } catch (e) { }
+      return obj;
+    }
+  }
+  // Fallback a localStorage cuando no hay sesión o falla la red
+  try {
+    const raw = localStorage.getItem(storageKey(y, m));
+    return raw ? JSON.parse(raw) : {};
+  } catch (e) { return {}; }
 }
 
-function saveMonth() { localStorage.setItem(storageKey(curYear, curMonth), JSON.stringify(monthData)); }
+function saveMonthLocal() {
+  try { localStorage.setItem(storageKey(curYear, curMonth), JSON.stringify(monthData)); } catch (e) { }
+}
 
+function syncDayToSupabase(ds) {
+  if (!currentUser) return;
+  sb.from('r07_data').upsert(
+    { user_id: currentUser.id, day_key: ds, data: monthData[ds] || {}, updated_at: new Date().toISOString() },
+    { onConflict: 'user_id,day_key' }
+  );
+}
+
+function deleteDayFromSupabase(ds) {
+  if (!currentUser) return;
+  sb.from('r07_data').delete().eq('user_id', currentUser.id).eq('day_key', ds);
+}
+
+// ============================================================
+// Lógica de la app (setField, render, modal — sin cambios estructurales)
+// ============================================================
 function setField(ds, field, value) {
   if (!monthData[ds]) monthData[ds] = {};
   monthData[ds][field] = value;
-  saveMonth();
+  saveMonthLocal();
+  syncDayToSupabase(ds);
   renderCalendar();
 
   const indicator = document.getElementById('save-indicator');
@@ -117,17 +172,14 @@ function buildDayCell(d, dow, ds) {
 }
 
 function buildSummaryText(dow, d) {
-  // Valor relleno o línea en blanco
   const v = (val, wide) => val
     ? `<b>${val}</b>`
     : `<span class="blank${wide ? ' wide' : ''}"></span>`;
 
-  // Casilla de verificación: X si está seleccionado, línea si no
   const bc = (field, val) => d[field] === val
     ? '<b>X</b>'
     : '<span class="blank"></span>';
 
-  // Radio para selección de hora
   const radios = (field, opts) =>
     `<span class="radio-row">${opts.map(([stored, label]) => {
       const sel = d[field] === stored;
@@ -136,31 +188,26 @@ function buildSummaryText(dow, d) {
 
   const lines = [];
 
-  // Lun, Mié, Vie, Sáb, Dom — oración personal
   if ([0, 1, 3, 5, 6].includes(dow)) {
     lines.push(`Hoy oré ${v(d.prayerMinutes)} min. <br> Y leí ${v(d.bibleReading, true)} en la Biblia`);
   }
 
-  // Mar y Jue — oración grupal
   if (dow === 2 || dow === 4) {
     lines.push(`Hoy me conecté ${bc('prayerAttendance', 'connected')} asistí ${bc('prayerAttendance', 'attended')} a la oración de ${v(d.prayerFrom)} a ${v(d.prayerTo)}`);
     lines.push(`Y leí ${v(d.bibleReading, true)} en la Biblia`);
   }
 
-  // Mié — culto
   if (dow === 3) {
     lines.push(`Hoy me conecté ${bc('cultoAttendance', 'connected')} asistí ${bc('cultoAttendance', 'attended')} al culto de las:`);
     lines.push(radios('cultoTime', [['5:00 PM', '5PM'], ['7:00 PM', '7PM']]));
   }
 
-  // Sáb — culto
   if (dow === 6) {
     lines.push(`Hoy asistí al culto de las:`);
     lines.push(radios('cultoTime', [['1:00 PM', '1PM'], ['3:00 PM', '3PM'], ['5:00 PM', '5PM'], ['7:00 PM', '7PM']]));
     lines.push(`¿Por qué me conecté virtual? ${v(d.virtualReason, true)}`);
   }
 
-  // Dom — culto
   if (dow === 0) {
     lines.push(`Hoy asistí al culto de las:`);
     lines.push(radios('cultoTime', [['7:30 AM', '7:30 AM'], ['9:30 AM', '9:30 AM'], ['11:30 AM', '11:30 AM'], ['1:30 PM', '1:30 PM']]));
@@ -255,51 +302,130 @@ function closeModal() { document.getElementById('modal-overlay').classList.remov
 
 function clearDay() {
   if (activeDs) {
+    deleteDayFromSupabase(activeDs);
     delete monthData[activeDs];
-    saveMonth();
+    saveMonthLocal();
     renderCalendar();
   }
   closeModal();
 }
 
-function shiftMonth(delta) {
+async function shiftMonth(delta) {
   curMonth += delta;
   if (curMonth < 0) { curMonth = 11; curYear--; }
   else if (curMonth > 11) { curMonth = 0; curYear++; }
-  monthData = loadMonth(curYear, curMonth);
+  monthData = await loadMonth(curYear, curMonth);
   renderCalendar();
 }
 
-function init() {
-  const now = new Date();
-  curYear = now.getFullYear();
-  curMonth = now.getMonth();
-  monthData = loadMonth(curYear, curMonth);
-  renderCalendar();
+// ============================================================
+// Auth — Google OAuth con Supabase
+// ============================================================
+function showApp() {
+  document.getElementById('auth-screen').style.display = 'none';
+  document.getElementById('main-app').style.display = '';
 
-  document.getElementById('prev-month').onclick = () => shiftMonth(-1);
-  document.getElementById('next-month').onclick = () => shiftMonth(1);
-  document.getElementById('modal-close').onclick = closeModal;
-  document.getElementById('modal-clear-btn').onclick = clearDay;
-  document.getElementById('modal-save-btn').onclick = closeModal;
-  document.getElementById('print-btn').onclick = () => {
-    const prev = document.title;
-    document.title = `R07 — ${MONTHS[curMonth]} ${curYear}`;
-    window.print();
-    document.title = prev;
-  };
-  const exportBtn = document.getElementById('export-btn');
-  if (exportBtn) {
-    exportBtn.onclick = () => {
-      const blob = new Blob([JSON.stringify(localStorage)], { type: 'application/json' });
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = 'R07_Respaldo.json';
-      a.click();
-    };
+  const meta = currentUser.user_metadata || {};
+  document.getElementById('user-name').textContent = meta.full_name || meta.name || currentUser.email || '';
+  const avatar = document.getElementById('user-avatar');
+  if (meta.avatar_url) {
+    avatar.src = meta.avatar_url;
+    avatar.style.display = 'block';
+  } else {
+    avatar.style.display = 'none';
   }
 }
 
+function showAuthScreen() {
+  document.getElementById('auth-screen').style.display = '';
+  document.getElementById('main-app').style.display = 'none';
+}
+
+function signInWithGoogle() {
+  sb.auth.signInWithOAuth({
+    provider: 'google',
+    options: { redirectTo: window.location.origin }
+  });
+}
+
+async function signOut() {
+  await sb.auth.signOut();
+  monthData = {};
+  showAuthScreen();
+}
+
+async function checkAuth() {
+  const { data: { session } } = await sb.auth.getSession();
+  if (session) {
+    currentUser = session.user;
+    showApp();
+    await init();
+  } else {
+    showAuthScreen();
+  }
+}
+
+sb.auth.onAuthStateChange(async (event, session) => {
+  if (event === 'SIGNED_IN' && session && !currentUser) {
+    currentUser = session.user;
+    showApp();
+    await init();
+  } else if (event === 'SIGNED_OUT') {
+    currentUser = null;
+  }
+});
+
+// ============================================================
+// Compartir como PDF
+// ============================================================
+async function shareMonth() {
+  const filename = `R07_${MONTHS[curMonth]}_${curYear}.pdf`;
+  const title = `R07 ${MONTHS[curMonth]} ${curYear}`;
+
+  const shareBtn = document.getElementById('share-btn');
+  shareBtn.disabled = true;
+  shareBtn.querySelector('span').textContent = 'Generando…';
+
+  // Ocultar elementos que no van en el PDF (igual que impresión)
+  const noPrint = document.querySelectorAll('.no-print');
+  const printHeader = document.querySelector('.print-header');
+  noPrint.forEach(el => el.style.visibility = 'hidden');
+  if (printHeader) printHeader.style.display = 'block';
+
+  try {
+    const element = document.getElementById('main-app');
+    const opt = {
+      margin: [8, 8],
+      filename,
+      image: { type: 'jpeg', quality: 0.95 },
+      html2canvas: { scale: 2, useCORS: true, logging: false },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
+    };
+
+    const blob = await html2pdf().from(element).set(opt).outputPdf('blob');
+    const file = new File([blob], filename, { type: 'application/pdf' });
+
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({ title, files: [file] });
+    } else {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+  } finally {
+    noPrint.forEach(el => el.style.visibility = '');
+    if (printHeader) printHeader.style.display = '';
+    shareBtn.disabled = false;
+    shareBtn.querySelector('span').textContent = 'Compartir';
+  }
+}
+
+// ============================================================
+// Inicialización
+// ============================================================
 function updateTimeField(ds, field, container) {
   const hour = container.querySelector('.time-hour').value;
   const min = container.querySelector('.time-min').value;
@@ -307,14 +433,37 @@ function updateTimeField(ds, field, container) {
   setField(ds, field, `${hour}:${min} ${period}`);
 }
 
+async function init() {
+  const now = new Date();
+  curYear = now.getFullYear();
+  curMonth = now.getMonth();
+  monthData = await loadMonth(curYear, curMonth);
+  renderCalendar();
+
+  document.getElementById('prev-month').onclick = () => shiftMonth(-1);
+  document.getElementById('next-month').onclick = () => shiftMonth(1);
+  document.getElementById('modal-close').onclick = closeModal;
+  document.getElementById('modal-clear-btn').onclick = clearDay;
+  document.getElementById('modal-save-btn').onclick = closeModal;
+  document.getElementById('sign-out-btn').onclick = signOut;
+  document.getElementById('share-btn').onclick = shareMonth;
+  document.getElementById('print-btn').onclick = () => {
+    const prev = document.title;
+    document.title = `R07 — ${MONTHS[curMonth]} ${curYear}`;
+    window.print();
+    document.title = prev;
+  };
+}
+
 window.setField = setField;
 window.updateTimeField = updateTimeField;
-document.addEventListener('DOMContentLoaded', init);
 
-// Escalado automático al imprimir para ajustar a A4 horizontal.
-// Usa `zoom` (no transform) porque zoom afecta el flujo del documento.
-// El conteo de filas determina si se necesita reducción: meses con 6 filas
-// no caben en A4 horizontal sin reducción.
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('google-sign-in-btn').addEventListener('click', signInWithGoogle);
+  checkAuth();
+});
+
+// Escalado automático al imprimir
 (function setupPrintScale() {
   function getWeekRows() {
     const grid = document.querySelector('.calendar-grid');
@@ -326,10 +475,7 @@ document.addEventListener('DOMContentLoaded', init);
     if (!app) return;
     app.style.zoom = '';
     const rows = getWeekRows();
-    if (rows >= 6) {
-      // Escalar proporcionalmente: 5 filas referencia / filas reales
-      app.style.zoom = (5 / rows).toFixed(4);
-    }
+    if (rows >= 6) app.style.zoom = (5 / rows).toFixed(4);
   }
 
   function resetScale() {
