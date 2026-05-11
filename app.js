@@ -13,12 +13,16 @@ const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 // ============================================================
 const MONTHS = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
 const DAY_NAMES = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+const THEME_KEY = 'r07_theme';
 
-let curYear, curMonth, monthData;
+let curYear, curMonth, monthData = {};
 let activeDs = null;
 let colombiaHolidays = new Set();
 let holidaysYear = -1;
 let currentUser = null;
+let currentSession = null;
+
+const DEV_BYPASS = false; // ⚠️ CAMBIAR A false ANTES DE SUBIR A PRODUCCIÓN
 
 // ============================================================
 // Festivos Colombia
@@ -66,24 +70,34 @@ function getColombiaHolidays(year) {
 // Almacenamiento: localStorage (caché) + Supabase (fuente de verdad)
 // ============================================================
 function storageKey(y, m) { return `r07_${y}-${String(m + 1).padStart(2, '0')}`; }
+function shouldSyncRemote() { return !!currentUser && !DEV_BYPASS; }
 
 async function loadMonth(y, m) {
-  if (currentUser) {
-    const prefix = `${y}-${m}-`;
-    const { data, error } = await sb
-      .from('r07_data')
-      .select('day_key, data')
-      .eq('user_id', currentUser.id)
-      .like('day_key', `${prefix}%`);
-
-    if (!error && data) {
-      const obj = {};
-      data.forEach(row => { obj[row.day_key] = row.data; });
-      try { localStorage.setItem(storageKey(y, m), JSON.stringify(obj)); } catch (e) { }
-      return obj;
+  if (shouldSyncRemote() && currentSession) {
+    try {
+      const params = new URLSearchParams({
+        'user_id': `eq.${currentSession.user.id}`,
+        'day_key': `like.${y}-${m}-%`,
+        'select': 'day_key,data'
+      });
+      const resp = await fetch(`${SUPABASE_URL}/rest/v1/r07_data?${params}`, {
+        headers: {
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${currentSession.access_token}`
+        }
+      });
+      if (resp.ok) {
+        const rows = await resp.json();
+        const obj = {};
+        rows.forEach(row => { obj[row.day_key] = row.data; });
+        try { localStorage.setItem(storageKey(y, m), JSON.stringify(obj)); } catch (e) { }
+        return obj;
+      }
+      console.error('loadMonth HTTP error:', resp.status, await resp.text());
+    } catch (e) {
+      console.error('loadMonth exception:', e);
     }
   }
-  // Fallback a localStorage cuando no hay sesión o falla la red
   try {
     const raw = localStorage.getItem(storageKey(y, m));
     return raw ? JSON.parse(raw) : {};
@@ -95,16 +109,39 @@ function saveMonthLocal() {
 }
 
 function syncDayToSupabase(ds) {
-  if (!currentUser) return;
-  sb.from('r07_data').upsert(
-    { user_id: currentUser.id, day_key: ds, data: monthData[ds] || {}, updated_at: new Date().toISOString() },
-    { onConflict: 'user_id,day_key' }
-  );
+  if (!shouldSyncRemote() || !currentSession) return;
+  fetch(`${SUPABASE_URL}/rest/v1/r07_data?on_conflict=user_id,day_key`, {
+    method: 'POST',
+    headers: {
+      'apikey': SUPABASE_ANON_KEY,
+      'Authorization': `Bearer ${currentSession.access_token}`,
+      'Content-Type': 'application/json',
+      'Prefer': 'resolution=merge-duplicates'
+    },
+    body: JSON.stringify({
+      user_id: currentSession.user.id,
+      day_key: ds,
+      data: monthData[ds] || {},
+      updated_at: new Date().toISOString()
+    })
+  }).then(resp => {
+    if (!resp.ok) resp.text().then(t => console.error('syncDay error:', resp.status, t));
+  }).catch(e => console.error('syncDay fetch error:', e));
 }
 
 function deleteDayFromSupabase(ds) {
-  if (!currentUser) return;
-  sb.from('r07_data').delete().eq('user_id', currentUser.id).eq('day_key', ds);
+  if (!shouldSyncRemote() || !currentSession) return;
+  const params = new URLSearchParams({
+    'user_id': `eq.${currentSession.user.id}`,
+    'day_key': `eq.${ds}`
+  });
+  fetch(`${SUPABASE_URL}/rest/v1/r07_data?${params}`, {
+    method: 'DELETE',
+    headers: {
+      'apikey': SUPABASE_ANON_KEY,
+      'Authorization': `Bearer ${currentSession.access_token}`
+    }
+  }).catch(e => console.error('deleteDay fetch error:', e));
 }
 
 // ============================================================
@@ -230,7 +267,8 @@ function openModal(d, dow, ds) {
     const div = document.createElement('div');
     div.className = 'form-group';
     div.innerHTML = `<label class="field-label">${label}</label>
-                     <input type="${inputType}" placeholder="${placeholder}" value="${data[field] || ''}" oninput="setField('${ds}', '${field}', this.value)">`;
+                     <input type="${inputType}" placeholder="${placeholder}" oninput="setField('${ds}', '${field}', this.value)">`;
+    div.querySelector('input').value = data[field] || '';
     body.appendChild(div);
   }
 
@@ -243,7 +281,7 @@ function openModal(d, dow, ds) {
       const m = existing.match(/^(\d+):(\d+)\s*(AM|PM)$/i);
       if (m) { selHour = String(parseInt(m[1])); selMin = m[2].padStart(2, '0'); selPeriod = m[3].toUpperCase(); }
     }
-    const hourOpts = Array.from({length: 12}, (_, i) => i + 1)
+    const hourOpts = Array.from({ length: 12 }, (_, i) => i + 1)
       .map(h => `<option value="${h}"${String(h) === selHour ? ' selected' : ''}>${h}</option>`).join('');
     const minOpts = ['00', '15', '30', '45']
       .map(m => `<option value="${m}"${m === selMin ? ' selected' : ''}>${m}</option>`).join('');
@@ -257,6 +295,7 @@ function openModal(d, dow, ds) {
         <select class="time-period" onchange="updateTimeField('${ds}','${field}',this.closest('.time-selector'))">${periodOpts}</select>
       </div>`;
     body.appendChild(div);
+    if (!existing) setField(ds, field, `${selHour}:${selMin} ${selPeriod}`);
   }
 
   function addRadio(label, field, options) {
@@ -273,6 +312,15 @@ function openModal(d, dow, ds) {
     body.appendChild(div);
   }
 
+  function addTextarea(label, field, placeholder) {
+    const div = document.createElement('div');
+    div.className = 'form-group';
+    div.innerHTML = `<label class="field-label">${label}</label>
+                     <textarea placeholder="${placeholder}" oninput="setField('${ds}', '${field}', this.value)"></textarea>`;
+    div.querySelector('textarea').value = data[field] || '';
+    body.appendChild(div);
+  }
+
   if ([0, 1, 3, 5, 6].includes(dow)) {
     addInput('Hoy oré (minutos)', 'prayerMinutes', 'ej. 30 o 60', 'number');
     addInput('Y leí en la Biblia', 'bibleReading', 'ej. Mateo 5:1-24 o Salmo 23');
@@ -281,7 +329,7 @@ function openModal(d, dow, ds) {
   if (dow === 2 || dow === 4) {
     addRadio('Asistencia Oración', 'prayerAttendance', [{ v: 'connected', l: 'Me conecté' }, { v: 'attended', l: 'Asistí' }]);
     addTimeSelector('Desde (Hora)', 'prayerFrom', 'AM');
-    addTimeSelector('Hasta (Hora)', 'prayerTo', 'PM');
+    addTimeSelector('Hasta (Hora)', 'prayerTo', 'AM');
     addInput('Y leí en la Biblia', 'bibleReading', 'ej. Josué 1');
   } else if (dow === 3) {
     addRadio('Al culto de las:', 'cultoTime', [{ v: '5:00 PM', l: '5:00 PM' }, { v: '7:00 PM', l: '7:00 PM' }]);
@@ -294,6 +342,8 @@ function openModal(d, dow, ds) {
     addRadio('Modalidad:', 'prayerAttendance', [{ v: 'connected', l: 'Virtual' }, { v: 'attended', l: 'Presencial' }]);
     addInput('¿Por qué me conecté virtual?', 'virtualReason', 'ej. Estaba de viaje o enfermo');
   }
+
+  addTextarea('¿Qué te dijo Dios?', 'godMessage', 'Escribe aquí lo que Dios te habló hoy...');
 
   document.getElementById('modal-overlay').classList.add('open');
 }
@@ -323,7 +373,7 @@ async function shiftMonth(delta) {
 // ============================================================
 function showApp() {
   document.getElementById('auth-screen').style.display = 'none';
-  document.getElementById('main-app').style.display = '';
+  document.getElementById('main-app').style.display = 'block';
 
   const meta = currentUser.user_metadata || {};
   document.getElementById('user-name').textContent = meta.full_name || meta.name || currentUser.email || '';
@@ -337,7 +387,7 @@ function showApp() {
 }
 
 function showAuthScreen() {
-  document.getElementById('auth-screen').style.display = '';
+  document.getElementById('auth-screen').style.display = 'flex';
   document.getElementById('main-app').style.display = 'none';
 }
 
@@ -351,34 +401,64 @@ function signInWithGoogle() {
 async function signOut() {
   await sb.auth.signOut();
   monthData = {};
+  currentSession = null;
   showAuthScreen();
 }
 
+async function onSignedIn(user) {
+  currentUser = user;
+  showApp();
+  await init();
+}
+
 async function checkAuth() {
-  const { data: { session } } = await sb.auth.getSession();
-  if (session) {
-    currentUser = session.user;
-    showApp();
-    await init();
-  } else {
-    showAuthScreen();
+  if (DEV_BYPASS) {
+    await onSignedIn({ id: 'dev-user', email: 'dev@local', user_metadata: { full_name: 'Dev' } });
+    return;
   }
+  // Show auth screen immediately so there's no blank-screen wait.
+  // onAuthStateChange will override to showApp() in ~100ms if the user is already signed in.
+  showAuthScreen();
 }
 
 sb.auth.onAuthStateChange(async (event, session) => {
-  if (event === 'SIGNED_IN' && session && !currentUser) {
-    currentUser = session.user;
-    showApp();
-    await init();
+  if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session && !currentUser) {
+    currentSession = session;
+    await onSignedIn(session.user);
+  } else if (event === 'TOKEN_REFRESHED' && session) {
+    currentSession = session;
   } else if (event === 'SIGNED_OUT') {
     currentUser = null;
+    currentSession = null;
   }
 });
 
 // ============================================================
 // Compartir como PDF
 // ============================================================
+function loadHtml2PdfLib() {
+  if (window.html2pdf) return Promise.resolve();
+  return new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js';
+    s.onload = resolve;
+    s.onerror = () => reject(new Error('No se pudo cargar html2pdf'));
+    document.head.appendChild(s);
+  });
+}
+
 async function shareMonth() {
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+
+  // iOS Safari no permite share() después de una promesa larga — usar print nativo
+  if (isIOS) {
+    const prev = document.title;
+    document.title = `R07 — ${MONTHS[curMonth]} ${curYear}`;
+    window.print();
+    document.title = prev;
+    return;
+  }
+
   const filename = `R07_${MONTHS[curMonth]}_${curYear}.pdf`;
   const title = `R07 ${MONTHS[curMonth]} ${curYear}`;
 
@@ -386,23 +466,36 @@ async function shareMonth() {
   shareBtn.disabled = true;
   shareBtn.querySelector('span').textContent = 'Generando…';
 
-  // Ocultar elementos que no van en el PDF (igual que impresión)
+  try { await loadHtml2PdfLib(); } catch (e) {
+    alert('No se pudo cargar la librería de PDF. Revisa tu conexión.');
+    shareBtn.disabled = false;
+    shareBtn.querySelector('span').textContent = 'Compartir';
+    return;
+  }
+
   const noPrint = document.querySelectorAll('.no-print');
   const printHeader = document.querySelector('.print-header');
-  noPrint.forEach(el => el.style.visibility = 'hidden');
+  noPrint.forEach(el => el.style.display = 'none');
   if (printHeader) printHeader.style.display = 'block';
+  document.body.classList.add('generating-pdf');
 
   try {
     const element = document.getElementById('main-app');
     const opt = {
       margin: [8, 8],
       filename,
-      image: { type: 'jpeg', quality: 0.95 },
-      html2canvas: { scale: 2, useCORS: true, logging: false },
+      image: { type: 'png' },
+      html2canvas: {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff',
+        allowTaint: false
+      },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
     };
 
-    const blob = await html2pdf().from(element).set(opt).outputPdf('blob');
+    const blob = await html2pdf().set(opt).from(element).outputPdf('blob');
     const file = new File([blob], filename, { type: 'application/pdf' });
 
     if (navigator.canShare && navigator.canShare({ files: [file] })) {
@@ -412,11 +505,19 @@ async function shareMonth() {
       const a = document.createElement('a');
       a.href = url;
       a.download = filename;
+      document.body.appendChild(a);
       a.click();
+      document.body.removeChild(a);
       URL.revokeObjectURL(url);
     }
+  } catch (err) {
+    if (err.name !== 'AbortError') {
+      console.error('shareMonth:', err);
+      alert(`No se pudo generar el PDF: ${err.message}`);
+    }
   } finally {
-    noPrint.forEach(el => el.style.visibility = '');
+    document.body.classList.remove('generating-pdf');
+    noPrint.forEach(el => el.style.display = '');
     if (printHeader) printHeader.style.display = '';
     shareBtn.disabled = false;
     shareBtn.querySelector('span').textContent = 'Compartir';
@@ -461,6 +562,25 @@ window.updateTimeField = updateTimeField;
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('google-sign-in-btn').addEventListener('click', signInWithGoogle);
   checkAuth();
+
+  const backToTop = document.getElementById('back-to-top');
+  const getScrollY = () => window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0;
+  const onScroll = () => backToTop.classList.toggle('visible', getScrollY() > 80);
+  window.addEventListener('scroll', onScroll, { passive: true });
+  document.addEventListener('scroll', onScroll, { passive: true });
+  document.body.addEventListener('scroll', onScroll, { passive: true });
+  backToTop.addEventListener('click', () => {
+    try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch (_) { }
+    try { document.body.scrollTo({ top: 0, behavior: 'smooth' }); } catch (_) { }
+    try { document.documentElement.scrollTo({ top: 0, behavior: 'smooth' }); } catch (_) { }
+  });
+
+  const themeToggle = document.getElementById('theme-toggle');
+  themeToggle.addEventListener('click', () => {
+    const next = document.documentElement.dataset.theme === 'light' ? 'dark' : 'light';
+    document.documentElement.dataset.theme = next;
+    try { localStorage.setItem(THEME_KEY, next); } catch (e) { }
+  });
 });
 
 // Escalado automático al imprimir

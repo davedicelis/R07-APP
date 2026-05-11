@@ -4,21 +4,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>R07 APP</title>
+  <title>R07 App</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet"
-    href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700;9..144,800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap">
+    href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700;9..144,800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Caveat:wght@500;600;700&display=swap">
   <link rel="stylesheet" href="style.css">
-  <script>
-    // Tema: aplicar antes del paint para evitar flash
-    (function () {
-      try {
-        const t = localStorage.getItem('r07_theme') || 'light';
-        document.documentElement.dataset.theme = t;
-      } catch (e) { document.documentElement.dataset.theme = 'light'; }
-    })();
-  </script>
+  <script src="theme-init.js"></script>
 </head>
 
 <body>
@@ -35,7 +27,7 @@
       <ul class="auth-features">
         <li>Accede desde cualquier dispositivo</li>
         <li>Tus datos siempre disponibles</li>
-        <li>Comparte tu reporte con tu líder</li>
+        <li>Comparte tu R07 con tu líder</li>
       </ul>
       <button id="google-sign-in-btn" class="btn-google">
         <svg viewBox="0 0 24 24" width="20" height="20" xmlns="http://www.w3.org/2000/svg">
@@ -55,10 +47,11 @@
         Ingresar con Google
       </button>
     </div>
+
   </div>
 
   <!-- ==================== APP PRINCIPAL ==================== -->
-  <div class="app" id="main-app" style="display:none">
+  <div class="app" id="main-app">
     <header class="no-print">
       <div class="header-nav">
         <button id="prev-month" class="icon-btn" aria-label="Mes anterior">
@@ -121,6 +114,13 @@
       </div>
     </header>
 
+    <button id="back-to-top" class="back-to-top no-print" aria-label="Volver arriba">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"
+        stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="18 15 12 9 6 15"></polyline>
+      </svg>
+    </button>
+
     <div class="print-header">
       <h2 id="print-month-title"></h2>
     </div>
@@ -162,21 +162,7 @@
 
   <!-- SDKs -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js"></script>
   <script src="app.js"></script>
-  <script>
-    // Toggle de tema (no toca la lógica de la app)
-    (function () {
-      const btn = document.getElementById('theme-toggle');
-      if (!btn) return;
-      btn.addEventListener('click', () => {
-        const cur = document.documentElement.dataset.theme || 'light';
-        const next = cur === 'light' ? 'dark' : 'light';
-        document.documentElement.dataset.theme = next;
-        try { localStorage.setItem('r07_theme', next); } catch (e) { }
-      });
-    })();
-  </script>
 </body>
 
 </html>

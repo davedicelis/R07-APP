@@ -1,6 +1,6 @@
-# R07 — Registro de Discipulado
+# R07 — Registro de R07
 
-Una aplicación web interactiva diseñada para el seguimiento y registro de actividades de discipulado, organizada visualmente a través de un calendario dinámico.
+Una aplicación web interactiva diseñada para el seguimiento y registro de actividades de R07, organizada visualmente a través de un calendario dinámico.
 
 ## 🚀 Características
 
@@ -30,4 +30,4 @@ Una aplicación web interactiva diseñada para el seguimiento y registro de acti
 3. ¡Comienza a registrar tu progreso!
 
 ---
-*Desarrollado para facilitar el seguimiento organizado del discipulado.*
+*Desarrollado para facilitar el seguimiento organizado del R07.*

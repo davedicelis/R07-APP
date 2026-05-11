@@ -17,10 +17,8 @@ create table if not exists public.profiles (
 
 alter table public.profiles enable row level security;
 
-create policy "Perfiles visibles para todos"
-  on public.profiles for select using (true);
-
-create policy "Solo el dueño puede editar su perfil"
+-- Cada usuario solo ve y edita su propio perfil
+create policy "Solo el dueño accede a su perfil"
   on public.profiles for all
   using  (auth.uid() = id)
   with check (auth.uid() = id);
@@ -48,7 +46,20 @@ create trigger on_auth_user_created
 
 -- ============================================================
 -- TABLA: r07_data
--- Datos de discipulado por usuario por día
+-- Registro R07 por usuario por día.
+-- El campo `data` es JSONB flexible — no requiere ALTER TABLE
+-- para nuevos campos; simplemente se agregan al objeto JSON.
+--
+-- Estructura del campo `data` (todos opcionales):
+--   prayerMinutes    text/number  — minutos de oración (días: Dom,Lun,Mié,Vie,Sáb)
+--   bibleReading     text         — pasaje bíblico leído
+--   prayerAttendance text         — "connected" | "attended"
+--   prayerFrom       text         — hora inicio reunión de oración (HH:MM AM/PM)
+--   prayerTo         text         — hora fin reunión de oración (HH:MM AM/PM)
+--   cultoTime        text         — hora del culto asistido
+--   cultoAttendance  text         — "connected" | "attended"
+--   virtualReason    text         — motivo de conexión virtual
+--   godMessage       text         — ¿Qué te dijo Dios? (todos los días)
 -- ============================================================
 create table if not exists public.r07_data (
   id         uuid        primary key default gen_random_uuid(),
